@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Study Resource Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- <link rel="stylesheet" href="css/styles.css"> -->
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .fade-in { animation: fadeIn 0.6s ease-in-out; }
+    @keyframes fadeIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
+    .slide-up { animation: slideUp 0.4s ease-in-out; }
+    @keyframes slideUp { from {transform: translateY(100%);} to {transform: translateY(0);} }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white p-4 shadow-lg flex justify-between items-center">
+    <h1 class="text-xl font-bold flex items-center gap-2 fade-in"><i data-lucide="book-open"></i> Study Resource Hub</h1>
+    <nav class="space-x-4 hidden md:flex fade-in">
+      <button class="hover:text-yellow-300 flex items-center gap-1 transition-transform hover:scale-105"><i data-lucide="home"></i> Home</button>
+      <button class="hover:text-yellow-300 flex items-center gap-1 transition-transform hover:scale-105"><i data-lucide="book"></i> Subjects</button>
+      <button class="hover:text-yellow-300 flex items-center gap-1 transition-transform hover:scale-105"><i data-lucide="star"></i> Favorites</button>
+      <button class="hover:text-yellow-300 flex items-center gap-1 transition-transform hover:scale-105"><i data-lucide="user"></i> Dashboard</button>
+    </nav>
+  </header>
+
+  <!-- Search Bar -->
+  <section class="p-6 bg-white shadow-md mt-4 rounded-lg max-w-4xl mx-auto fade-in">
+    <div class="flex flex-col md:flex-row items-center gap-4">
+      <input id="searchInput" type="text" placeholder="Search for notes..." class="flex-1 border p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button onclick="searchNotes()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 flex items-center gap-2"><i data-lucide="search"></i> Search</button>
+    </div>
+    <div class="mt-4 flex flex-wrap gap-4">
+      <select id="subjectFilter" class="border p-2 rounded-lg">
+        <option value="">All Subjects</option>
+        <option value="CSE">CSE</option>
+        <option value="Math">Math</option>
+        <option value="Physics">Physics</option>
+      </select>
+      <select id="yearFilter" class="border p-2 rounded-lg">
+        <option value="">All Years</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+      </select>
+      <select id="typeFilter" class="border p-2 rounded-lg">
+        <option value="">All Types</option>
+        <option value="pdf">PDF</option>
+        <option value="ppt">PPT</option>
+        <option value="doc">DOC</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Notes Results -->
+  <section id="results" class="p-6 grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"></section>
+
+  <!-- Dashboard -->
+  <section class="p-6 max-w-6xl mx-auto fade-in">
+    <h2 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="layout-dashboard"></i> Dashboard</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white shadow rounded-lg p-4 hover:shadow-xl transition-transform hover:scale-[1.02] fade-in">
+        <h3 class="font-semibold mb-2 flex items-center gap-1"><i data-lucide="clock"></i> Recent Searches</h3>
+        <ul id="recentSearches" class="list-disc list-inside text-gray-600"></ul>
+      </div>
+      <div class="bg-white shadow rounded-lg p-4 hover:shadow-xl transition-transform hover:scale-[1.02] fade-in">
+        <h3 class="font-semibold mb-2 flex items-center gap-1"><i data-lucide="star"></i> Favorites</h3>
+        <ul id="favorites" class="list-disc list-inside text-gray-600"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chatbot -->
+  <section class="fixed bottom-4 right-4 w-80">
+    <div id="chatbot" class="bg-white shadow-lg rounded-lg hidden slide-up">
+      <div class="bg-blue-600 text-white p-3 rounded-t-lg flex items-center gap-2"><i data-lucide="bot"></i> Study Assistant</div>
+      <div id="chatContent" class="p-3 h-60 overflow-y-auto text-sm"></div>
+      <div class="flex border-t">
+        <input id="chatInput" type="text" placeholder="Ask me..." class="flex-1 p-2 rounded-bl-lg focus:outline-none">
+        <button onclick="sendMessage()" class="bg-blue-600 text-white px-4 rounded-br-lg flex items-center gap-1 hover:bg-blue-700 transition"><i data-lucide="send"></i> Send</button>
+      </div>
+    </div>
+    <button onclick="toggleChatbot()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-110 flex items-center gap-1">
+      <i data-lucide="message-circle"></i> Chat
+    </button>
+  </section>
+
+  <script>
+    lucide.createIcons();
+
+    const resources = [
+      {title: "CSE Notes - Data Structures", subject: "CSE", year: "2", type: "pdf", link: "#"},
+      {title: "Math Notes - Calculus", subject: "Math", year: "1", type: "doc", link: "#"},
+      {title: "Physics PPT - Mechanics", subject: "Physics", year: "1", type: "ppt", link: "#"},
+    ];
+
+    function renderResources(list){
+      const results = document.getElementById("results");
+      results.innerHTML = list.map(r => `
+        <div class='bg-white shadow rounded-lg p-4 hover:shadow-xl transition-all transform hover:scale-105 fade-in'>
+          <h3 class='font-bold text-lg flex items-center gap-2'><i data-lucide="file"></i> ${r.title}</h3>
+          <p class='text-sm text-gray-600'>Subject: ${r.subject}, Year: ${r.year}, Type: ${r.type.toUpperCase()}</p>
+          <div class='mt-2 flex gap-2'>
+            <a href='${r.link}' class='bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-1 transition-transform hover:scale-105'><i data-lucide="download"></i> Open</a>
+            <button onclick="addFavorite('${r.title}')" class='bg-yellow-400 text-black px-3 py-1 rounded-lg text-sm hover:bg-yellow-500 flex items-center gap-1 transition-transform hover:scale-105'><i data-lucide="star"></i> Favorite</button>
+          </div>
+        </div>`).join("");
+      lucide.createIcons();
+    }
+
+    function searchNotes(){
+      const term = document.getElementById("searchInput").value.toLowerCase();
+      const subject = document.getElementById("subjectFilter").value;
+      const year = document.getElementById("yearFilter").value;
+      const type = document.getElementById("typeFilter").value;
+      const filtered = resources.filter(r => 
+        (!term || r.title.toLowerCase().includes(term)) &&
+        (!subject || r.subject === subject) &&
+        (!year || r.year === year) &&
+        (!type || r.type === type)
+      );
+      renderResources(filtered);
+      addRecentSearch(term || "All Resources");
+    }
+
+    function addRecentSearch(query){
+      let list = JSON.parse(localStorage.getItem("recent")) || [];
+      list.unshift(query);
+      if(list.length > 5) list.pop();
+      localStorage.setItem("recent", JSON.stringify(list));
+      loadDashboard();
+    }
+
+    function addFavorite(title){
+      let fav = JSON.parse(localStorage.getItem("favorites")) || [];
+      if(!fav.includes(title)) fav.push(title);
+      localStorage.setItem("favorites", JSON.stringify(fav));
+      loadDashboard();
+    }
+
+    function loadDashboard(){
+      document.getElementById("recentSearches").innerHTML = (JSON.parse(localStorage.getItem("recent"))||[]).map(i => `<li class='fade-in'>${i}</li>`).join("");
+      document.getElementById("favorites").innerHTML = (JSON.parse(localStorage.getItem("favorites"))||[]).map(i => `<li class='fade-in'>${i}</li>`).join("");
+    }
+
+    function toggleChatbot(){
+      const bot = document.getElementById("chatbot");
+      bot.classList.toggle("hidden");
+      if(!bot.classList.contains("hidden")) bot.classList.add("slide-up");
+    }
+
+    function sendMessage(){
+      const input = document.getElementById("chatInput");
+      const content = document.getElementById("chatContent");
+      const msg = input.value.trim();
+      if(!msg) return;
+      content.innerHTML += `<div class='text-right mb-2 fade-in'><span class='bg-blue-100 px-2 py-1 rounded-lg inline-block'>${msg}</span></div>`;
+      input.value = "";
+      let reply = "Sorry, I don't understand.";
+      if(msg.toLowerCase().includes("notes")) reply = "You can search subject-wise notes above.";
+      else if(msg.toLowerCase().includes("favorite")) reply = "Check your Dashboard > Favorites.";
+      else if(msg.toLowerCase().includes("hello")) reply = "Hello! How can I help you with study materials?";
+      setTimeout(()=>{
+        content.innerHTML += `<div class='text-left mb-2 fade-in'><span class='bg-gray-100 px-2 py-1 rounded-lg inline-block'>${reply}</span></div>`;
+        content.scrollTop = content.scrollHeight;
+      },500);
+    }
+
+    renderResources(resources);
+    loadDashboard();
+  </script>
+</body>
+</html>
